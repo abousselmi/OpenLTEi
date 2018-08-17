@@ -1,0 +1,17 @@
+<resources>
+    <!-- Global -->
+    <string name="app_name">OpenLTEi</string>
+
+    <!-- Begin menu -->
+    <string name="action_settings">Settings</string>
+    <string name="action_close_app">Close</string>
+    <!-- End menu -->
+
+    <!-- Begin activity -->
+    <string name="get_info_btn">Get network info snapshot</string>
+    <!-- End activity -->
+
+    <!-- Messages -->
+    <string name="not_available">Not available..</string>
+    <string name="not_implemented">Not implemented..</string>
+</resources>

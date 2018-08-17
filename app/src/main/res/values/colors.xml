@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Global -->
+    <color name="colorPrimary">#FF7900</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#FF7900</color>
+
+    <!-- Begin Main Activity -->
+    <color name="listViewSelector">#FFF2E6</color>
+    <!-- End Main Activity -->
+</resources>

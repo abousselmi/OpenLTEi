@@ -1,0 +1,12 @@
+<resources>
+    <!-- Global -->
+    <dimen name="fab_margin">16dp</dimen>
+
+    <!-- Begin Main Activity-->
+    <dimen name="net_info_lv">10dp</dimen>
+    <dimen name="net_info_tv_key">14sp</dimen>
+    <dimen name="net_info_lv_value">14sp</dimen>
+    <dimen name="net_info_lv_margin">20dp</dimen>
+    <dimen name="dividerHeight">1dp</dimen>
+    <!-- End Main Activity-->
+</resources>
