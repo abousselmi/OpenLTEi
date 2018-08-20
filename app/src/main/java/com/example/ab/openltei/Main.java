@@ -2,31 +2,29 @@ package com.example.ab.openltei;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.telephony.SignalStrength;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoLte;
+import android.telephony.CellSignalStrengthLte;
 import android.telephony.TelephonyManager;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.ab.openltei.R;
+import com.example.ab.openltei.netinfo.NetInfo;
+import com.example.ab.openltei.netinfo.NetInfoAdapter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Main extends AppCompatActivity {
 
@@ -43,7 +41,7 @@ public class Main extends AppCompatActivity {
         Button getInfoBtn = (Button) findViewById(R.id.get_info_btn);
         getInfoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            @TargetApi(28)
+            @TargetApi(24)
             public void onClick(View v) {
                 //Network info snapshot list view
                 ArrayList<NetInfo> netInfoArray = new ArrayList<NetInfo>();
@@ -64,7 +62,7 @@ public class Main extends AppCompatActivity {
                         String.valueOf(java.util.Calendar.getInstance().getTime())));
 
                 //Print the phone and network info
-                TelephonyManager telManager = (TelephonyManager)
+                TelephonyManager telephonyManager = (TelephonyManager)
                         getSystemService(TELEPHONY_SERVICE);
                 if (ContextCompat.checkSelfPermission(getApplicationContext(),
                         Manifest.permission.READ_PHONE_STATE)
@@ -72,14 +70,14 @@ public class Main extends AppCompatActivity {
 
                     //Print IMEI number
                     String imei = "Not available";
-                    if (telManager.getDeviceId() != null)
-                        imei = String.valueOf(telManager.getDeviceId());
+                    if (telephonyManager.getDeviceId() != null)
+                        imei = String.valueOf(telephonyManager.getDeviceId());
                     netInfoAdapter.add(new NetInfo("IMEI", imei));
 
                     //Print IMSI number
                     String imsi = "Not available";
-                    if (telManager.getSubscriberId() != null)
-                        imsi = String.valueOf(telManager.getSubscriberId());
+                    if (telephonyManager.getSubscriberId() != null)
+                        imsi = String.valueOf(telephonyManager.getSubscriberId());
                     netInfoAdapter.add(new NetInfo("IMSI", imsi));
 
                     //Print network type
@@ -88,37 +86,68 @@ public class Main extends AppCompatActivity {
                             "1xRTT", "HSDPA", "HSUPA", "HSPA/HSPA+", "IDEN", "EVDO revision B",
                             "LTE", "EHRPD", "HSPAP/HSPAP+", "GSM", "TD_SCDMA", "IWLAN"};
                     netInfoAdapter.add(new NetInfo("Network Type",
-                            networkTypeList[telManager.getNetworkType()]));
+                            networkTypeList[telephonyManager.getNetworkType()]));
 
-                    //Print Signal Strength
-                    telManager = (TelephonyManager)
-                            getSystemService(TELECOM_SERVICE);
+                    if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                            Manifest.permission.ACCESS_COARSE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        //Print All Cell Info
+                        List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
+                        for (int i=0; i<cellInfoList.size(); i++) {
+                            //Only LTE info are processed
+                            CellInfo cellInfo = cellInfoList.get(i);
+                            System.out.println("i: " + i);
+                            if (cellInfo.getClass() ==  CellInfoLte.class) {
+                                CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
+                                CellSignalStrengthLte cellSignalStrengthLte = cellInfoLte.
+                                        getCellSignalStrength();
 
-                    SignalStrength signalStrength = telManager.getSignalStrength();
+                                //LTE signal level
+                                netInfoAdapter.add(new NetInfo("LTE signal level [0..97]",
+                                        String.valueOf(cellSignalStrengthLte.getAsuLevel())));
 
-                    if (signalStrength.isGsm()) {
-                        System.out.println("##########  IS GSM  ##########");
-                    } else {
-                        System.out.println("##########  IS NOT GSM  ##########");
-                    }
-                    /*netInfoAdapter.add(new NetInfo("GSM signal strength",
-                            String.valueOf(.
-                                    getGsmSignalStrength())));*/
-                    /*try {
-                        if (telManager.getSignalStrength() != null) {
-                            netInfoAdapter.add(new NetInfo("GSM bit error rate",
-                                    String.valueOf(telManager.getSignalStrength().
-                                            getGsmBitErrorRate())));
-                            netInfoAdapter.add(new NetInfo("GSM signal strength",
-                                    String.valueOf(telManager.getSignalStrength().
-                                            getGsmSignalStrength())));
+                                //Channel quality indicator (CQI)
+                                /*netInfoAdapter.add(new NetInfo("Channel quality indicator " +
+                                        "(CQI)", String.valueOf(cellSignalStrengthLte.getCqi())));*/
+
+                                //Signal strength as dBm
+                                netInfoAdapter.add(new NetInfo("Signal strength as dBm",
+                                        String.valueOf(cellSignalStrengthLte.getDbm())));
+
+                                //Signal strength as int
+                                netInfoAdapter.add(new NetInfo("Signal strength as int " +
+                                        "[0..4]",String.valueOf(cellSignalStrengthLte.getLevel())));
+
+                                //Reference signal received power
+                                /*netInfoAdapter.add(new NetInfo("Reference signal received " +
+                                    "power", String.valueOf(cellSignalStrengthLte.getRsrp())));*/
+
+                                //Reference signal received quality
+                                /*netInfoAdapter.add(new NetInfo("Reference signal received " +
+                                    "quality",String.valueOf(cellSignalStrengthLte.getRsrq())));*/
+
+                                //Reference signal signal-to-noise ratio
+                                /*netInfoAdapter.add(new NetInfo("Reference signal " +
+                                    "signal-to-noise ratio", String.valueOf(cellSignalStrengthLte.
+                                    getRssnr())));
+*/
+                                //Timing advance value
+                                netInfoAdapter.add(new NetInfo("Timing advance [0..1282]",
+                                        String.valueOf(cellSignalStrengthLte.getTimingAdvance())));
+
+                                //Operator info
+                                netInfoAdapter.add(new NetInfo("Registered to a " +
+                                        "mobile network ", String.valueOf(cellInfoLte.
+                                        isRegistered())));
+                                if (cellInfoLte.isRegistered()) {
+                                    netInfoAdapter.add(new NetInfo("Network Operator",
+                                            telephonyManager.getNetworkOperatorName()));
+                                }
+                            }
+
                         }
-                    } catch (NullPointerException exp) {
-                        Toast toast = Toast.makeText(getApplicationContext(),
-                                "Signal info not available",
-                                Toast.LENGTH_SHORT);
-                        toast.show();
-                    }*/
+                    }
+
                 }
 
                 //Print the dummy end of list
@@ -164,40 +193,5 @@ public class Main extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private class NetInfo {
-        private String infoKey;
-        private String infoValue;
-
-        private NetInfo(String infoKey, String infoValue) {
-            this.infoKey = infoKey;
-            this.infoValue = infoValue;
-        }
-    }
-
-    private class NetInfoAdapter extends ArrayAdapter<NetInfo> {
-        private NetInfoAdapter(Context context, ArrayList<NetInfo> info) {
-            super(context, 0, info);
-        }
-
-        @Override
-        public @NonNull  View getView(int position, View convertView, @NonNull  ViewGroup parent) {
-            NetInfo netInfo = getItem(position);
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.net_info,
-                        parent, false);
-            }
-            TextView netInfoTvKey = (TextView) convertView.findViewById(R.id.net_info_tv_key);
-            TextView netInfoTvValues = (TextView) convertView.findViewById(R.id.net_info_tv_value);
-            if (netInfo != null) {
-                netInfoTvKey.setText(netInfo.infoKey);
-                netInfoTvValues.setText(netInfo.infoValue);
-            } else {
-                netInfoTvKey.setText(R.string.not_available);
-                netInfoTvValues.setText(R.string.not_available);
-            }
-            return convertView;
-        }
     }
 }
